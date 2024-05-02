@@ -1,0 +1,17 @@
+version: "3"
+services:
+  application:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    container_name: sample
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../logs:/logs
+    environment:
+      TZ: Asia/Seoul
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4317
+      OTEL_RESOURCE_ATTRIBUTES: service.name=sample,compose_service=sample
+      OTEL_METRICS_EXPORTER: none
+      OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED: false

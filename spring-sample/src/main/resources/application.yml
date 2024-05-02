@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: spring-sample
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: debug
+  config: classpath:logback-spring.xml
+  file:
+    path: ./logs
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+management:
+  tracing:
+    propagation:
+      type: w3c
+    enabled: true
+    sampling:
+      probability: 1.0
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      base-path: /actuator
+      path-mapping:
+        health: health
+      exposure:
+        include: "*"
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+    tags:
+      application: ${spring.application.name}

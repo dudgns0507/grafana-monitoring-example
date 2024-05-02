@@ -1,0 +1,88 @@
+version: '3.8'
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/volume:/var/lib/grafana
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "8m"
+        max-file: "10"
+
+  prometheus:
+    image: prom/prometheus:main
+    container_name: prometheus
+    volumes:
+      - ./prometheus/config:/etc/prometheus
+      - ./prometheus/volume:/prometheus
+    ports:
+      - 9090:9090
+    command:
+      - '--web.enable-lifecycle'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
+      - '--enable-feature=exemplar-storage'
+      - '--storage.tsdb.retention=7d'
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "8m"
+        max-file: "10"
+
+  node:
+    image: prom/node-exporter
+    container_name: node-exporter
+    ports:
+      - "9101:9100"
+    restart: always
+
+  loki:
+    container_name: loki
+    image: grafana/loki:latest
+    volumes:
+      - ./loki/config:/etc/loki
+      - ./loki/volume:/loki
+    ports:
+      - 3100:3100
+      - 9096:9096
+    restart: always
+
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:latest
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./promtail/config:/etc/promtail/config
+      - ./promtail/volume:/promtail
+      - ./logs:/logs
+    command: -config.file=/etc/promtail/config/config.yaml
+    restart: always
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:latest
+    command:
+      [
+        "-config.file=/etc/tempo/config/tempo.yaml",
+        "--auth.enabled=false"
+      ]
+    volumes:
+      - ./tempo/config:/etc/tempo/config
+      - ./tempo/volume:/var
+    ports:
+      - "3200:3200" # tempo
+      - "9095:9095" # tempo grpc
+      - "4317:4317" # otlp grpc
+      - "4318:4318" # otlp http
+    restart: always

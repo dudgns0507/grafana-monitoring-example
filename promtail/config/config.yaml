@@ -1,0 +1,27 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /etc/promtail/config/positions.yaml
+
+clients:
+  - url: http://host.docker.internal:3100/loki/api/v1/push
+    headers:
+      X-Scope-OrgID: monitoring
+
+target_config:
+  sync_period: 10s
+
+scrape_configs:
+  - job_name: sample-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          application: sample
+          env: dev
+          __path__: /logs/**/**.log
+    relabel_configs:
+      - source_labels: ["__address__"]
+        target_label: address
